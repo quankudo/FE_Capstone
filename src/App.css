@@ -1,0 +1,18 @@
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+html {
+  overflow-x: hidden;
+}
+
+.slick-dots li button:before {
+  color: white;  /* hoặc màu khác */
+}
+
+.slick-dots li.slick-active button:before {
+  color: red !important; /* dot được chọn màu đỏ */
+  opacity: 1;
+}

@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ROUTES } from "../constant/routes";
+import { ROUTES } from "@/constant/routes";
 import { toast } from 'react-toastify'
 import { useDispatch, useSelector } from "react-redux";
-import { loginFailure, loginStart, loginSuccess } from "../redux/slices/authSlice";
-import userApi from "../api/userApi";
+import { loginFailure, loginStart, loginSuccess } from "@/redux/slices/authSlice";
+import userApi from "@/api/userApi";
+import restaurantApi from "@/api/restaurantApi";
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -28,23 +29,38 @@ const Login = () => {
     dispatch(loginStart());
     try {
       const res = await userApi.login(formData);
+      let restaurantInfo = null;
       console.log(res);
-      const user = {id: res.user.id,name: res.user.name, email: res.user.email, role: res.user.role};
+      if (res.user.role === "Restaurant") {
+        const response = await restaurantApi.getRestaurantByUserId(res.user.id);
+        restaurantInfo = response;
+      }
+      const userData = {
+        user: {
+          id: res.user.id,
+          name: res.user.name,
+          email: res.user.email,
+          role: res.user.role,
+        },
+        restaurantInfo,
+      };
       localStorage.setItem('accessToken', res.token);
-      dispatch(loginSuccess(user));
-      if(user.role === 'Restaurant')
+      dispatch(loginSuccess(userData));
+      if(userData.user.role === 'Restaurant')
         navigate('/rest')
-      else if(user.role === 'Customer')
+      else if(userData.user.role === 'Customer')
         navigate(ROUTES.HOME)
+      else
+        navigate('/admin/dashboard')
+      toast.success("Đăng nhập thành công")
     } catch (err) {
       dispatch(loginFailure('Đăng nhập thất bại'));
       console.log(err);
-      
     }
   };
 
   return (
-    <div className="min-h-[60vh] flex items-center justify-center bg-gray-100 px-4">
+    <div className="min-h-[60vh] flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg">
         <h2 className="text-2xl font-medium text-center text-gray-800 mb-6">Đăng nhập</h2>
 

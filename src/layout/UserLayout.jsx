@@ -3,6 +3,7 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import { Outlet } from 'react-router-dom'
 import ScrollToTopButton from '../components/ScrollToTopButton'
+import ChatbotButton from '../components/ChatbotButton '
 
 const UserLayout = () => {
   return (
@@ -11,6 +12,7 @@ const UserLayout = () => {
       <Outlet />
       <Footer />
       <ScrollToTopButton />
+      <ChatbotButton />
     </div>
   )
 }

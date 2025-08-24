@@ -3,9 +3,9 @@ import React, { useState } from 'react'
 import { Heart, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '../constant/routes';
-const ListRestaurant = ({restaurants}) => {
-  console.log('res', restaurants);
-  
+import EmptyState from './EmptyState';
+import SkeletonRestaurantCard from './Skeletons/SkeletonRestaurantCard ';
+const ListRestaurant = ({restaurants, loading}) => {
     const [favorites, setFavorites] = useState([]);
 
     const handleToggleFavorite = (id) => {
@@ -15,13 +15,17 @@ const ListRestaurant = ({restaurants}) => {
     };
   return (
     <div className="md:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {restaurants.map((r) => (
-            <div
+      {loading ? (
+        // render skeleton trong lúc load
+        Array.from({ length: 3 }).map((_, i) => <SkeletonRestaurantCard key={i} />)
+        ) : restaurants.length > 0 ? (
+        restaurants.map((r) => (
+          <div
               key={r.Id}
               className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition"
             >
               <img
-                src={r.ImageUrl}
+                src={`${r.ImageUrl}`}
                 alt={r.Name}
                 className="w-full h-48 object-cover"
               />
@@ -47,11 +51,11 @@ const ListRestaurant = ({restaurants}) => {
                     <Star
                       key={i}
                       size={18}
-                      fill={i < Math.round(r.rating) ? 'currentColor' : 'none'}
+                      fill={i < Math.round(parseFloat(r.Score).toFixed(1)) ? 'currentColor' : 'none'}
                       stroke="currentColor"
                     />
                   ))}
-                  <span className="ml-1 text-gray-600 text-sm">{r.rating}</span>
+                  <span className="ml-1 text-gray-600 text-sm">{parseFloat(r.Score).toFixed(1)}</span>
                 </div>
 
                 {/* Review */}
@@ -68,11 +72,13 @@ const ListRestaurant = ({restaurants}) => {
                 </div>
               </div>
             </div>
-          ))}
-          {restaurants.length === 0 && (
-            <p className="col-span-full text-gray-500">Không tìm thấy kết quả.</p>
-          )}
+        ))
+      ) : (
+        <div className="col-span-full flex justify-center">
+          <EmptyState text="Danh sách nhà hàng yêu thích của bạn đang trống!" />
         </div>
+      )}
+    </div>
   )
 }
 

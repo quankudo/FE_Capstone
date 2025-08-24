@@ -1,20 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import RenderChart from '../../components/RenderChart';
 import ListComment from '../../components/ListComment';
-
-const fakeDishes = [
-  { id: 1, name: 'Phở Bò', type: 'Món chính', price: 45000, status: 'Đang bán', image: '', desc: 'Phở bò truyền thống thơm ngon.' },
-  { id: 2, name: 'Cà phê sữa đá', type: 'Đồ uống', price: 25000, status: 'Tạm ngưng', image: '', desc: 'Cà phê sữa đá đậm đà.' },
-  { id: 3, name: 'Bánh mì chảo', type: 'Món phụ', price: 35000, status: 'Đang bán', image: '', desc: 'Bánh mì chảo đầy đủ topping.' },
-  { id: 4, name: 'Bún Chả', type: 'Món chính', price: 50000, status: 'Đang bán', image: '', desc: 'Bún chả thơm ngon Hà Nội.' },
-  { id: 5, name: 'Trà đá', type: 'Đồ uống', price: 10000, status: 'Đang bán', image: '', desc: 'Trà đá mát lạnh giải khát.' },
-  { id: 6, name: 'Bánh flan', type: 'Món phụ', price: 20000, status: 'Tạm ngưng', image: '', desc: 'Bánh flan béo mềm.' },
-  { id: 7, name: 'Cơm gà', type: 'Món chính', price: 55000, status: 'Đang bán', image: '', desc: 'Cơm gà chiên giòn.' },
-  { id: 8, name: 'Sinh tố bơ', type: 'Đồ uống', price: 30000, status: 'Đang bán', image: '', desc: 'Sinh tố bơ béo ngậy.' },
-];
-
-// Fake data
+import dishApi from '../../api/dishApi';
+import evaluateDishApi from '../../api/evaluateDishApi';
+import Loading from '../../components/Loading'
+import { IoFastFoodSharp } from 'react-icons/io5';
+import TitleDashboard from '../../components/TitleDashboard';
 
 const fakeByHour = Array.from({ length: 24 }, (_, i) => ({
   hour: `${i}h`,
@@ -55,9 +47,43 @@ const DishDetails = () => {
     favorites: 0,
   });
   const [scope, setScope] = useState('today'); // today | week | month | year
+  const [dish, setDishes] = useState({})
+  const [comments, setComments] = useState([])
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate();
-  const dishId = parseInt(id, 10);
-  const dish = fakeDishes.find((d) => d.id === dishId);
+
+  const scopes = [
+    { value: 'today', label: 'Hôm nay' },
+    { value: 'week', label: 'Tuần này' },
+    { value: 'month', label: 'Tháng này' },
+    { value: 'year', label: 'Năm nay' }
+  ];
+
+  const handleChangeScope = (value) => setScope(value);
+
+  useEffect(()=>{
+    setLoading(true)
+    const fetchData = async () => {
+      try {
+        const resDish = await dishApi.getDishById(id)
+        const resComment = await evaluateDishApi.getEvaluateByDishId(id)
+        const resStats = await dishApi.getStatsDishes(id)
+
+        setStats({goodReviews: resStats.GoodReviews, badReviews: resStats.BadReviews, favorites: resStats.TotalFavorites})
+        setDishes(resDish)
+        setComments(resComment)
+      } catch (error) {
+        console.log(error);
+      }
+      finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  },[id])
+
+  if(loading)
+    return <Loading />
 
   if (!dish) {
     return (
@@ -77,30 +103,29 @@ const DishDetails = () => {
     <div className='p-4'>
     <div className='flex gap-8'>
         <div className="w-[55%] bg-white rounded ">
-            <h1 className="text-2xl font-medium mb-4">Chi tiết món ăn</h1>
-
-            <div className='flex gap-3'>
+            <TitleDashboard Icon={IoFastFoodSharp} title={`Chi tiết món ăn - ${dish.Name}`} />
+            <div className='flex flex-col gap-3 mb-3'>
                 <img
-                    src={dish.image || 'https://via.placeholder.com/300x200'}
+                    src={dish.ImageUrl || 'https://via.placeholder.com/300x200'}
                     alt="Dish"
-                    className="w-[300px] h-[200px] object-cover rounded mb-4"
+                    className="w-full h-[250px] object-cover rounded"
                 />
 
                 <div className="space-y-2 text-gray-700">
-                    <p><span className="font-semibold">Tên món:</span> {dish.name}</p>
-                    <p><span className="font-semibold">Loại:</span> {dish.type}</p>
-                    <p><span className="font-semibold">Giá:</span> {dish.price.toLocaleString()} VNĐ</p>
+                    <p><span className="font-semibold">Tên món:</span> {dish.Name}</p>
+                    <p><span className="font-semibold">Loại:</span> {dish.TypeDishName}</p>
+                    <p><span className="font-semibold">Giá:</span> {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(dish.Price)} VNĐ</p>
                     <p>
                     <span className="font-semibold">Trạng thái:</span>{' '}
                     <span
                         className={`px-2 py-1 rounded text-white text-xs ${
-                        dish.status === 'Đang bán' ? 'bg-green-500' : 'bg-gray-400'
+                        dish.Status === 1 ? 'bg-green-500' : 'bg-gray-400'
                         }`}
                     >
-                        {dish.status}
+                        {dish.Status === 1 ? "Đang bán" : "Ngừng bán"}
                     </span>
                     </p>
-                    <p><span className="font-semibold">Mô tả:</span> {dish.desc || 'Không có mô tả.'}</p>
+                    <p><span className="font-semibold">Mô tả:</span> {dish.Desc || 'Không có mô tả.'}</p>
                 </div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
@@ -118,8 +143,19 @@ const DishDetails = () => {
                 </div>
             </div>
         </div>
-        <ListComment />
+        <ListComment reviews={comments} />
     </div>
+      <div className="mb-6 mt-6 flex gap-4 justify-end">
+        {scopes.map((s) => (
+          <button
+            key={s.value}
+            className={`px-4 py-2 rounded border border-red-500 ${s.value === scope ? 'bg-red-500 text-white' : 'text-red-500'}`}
+            onClick={() => handleChangeScope(s.value)}
+          >
+            {s.label}
+          </button>
+        ))}
+      </div>
         {/* Charts */}
         {(() => {
         switch (scope) {

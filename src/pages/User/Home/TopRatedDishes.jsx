@@ -1,34 +1,34 @@
-import React from 'react';
-import TextTitle from '../../../components/TextTitle';
-import ListFood from '../../../components/ListFood';
-
-const topDishes = [
-  {
-    id: 1,
-    name: 'Bún chả Hà Nội',
-    rating: 4.7,
-    image: '/images/buncha.jpg',
-    restaurantName: 'Nhà hàng Hà Nội Quán',
-    restaurantId: 101,
-    description: 'Thịt nướng đậm vị, nước chấm chua ngọt hài hoà.',
-  },
-  {
-    id: 2,
-    name: 'Phở bò truyền thống',
-    rating: 4.6,
-    image: '/images/pho.jpg',
-    restaurantName: 'Phở Sướng',
-    restaurantId: 102,
-    description: 'Nước dùng ngọt xương, thơm vị quế hồi đặc trưng.',
-  },
-  // Thêm các món khác nếu cần
-];
+import React, { useEffect, useState } from 'react';
+import TextTitle from '@/components/TextTitle';
+import ListFood from '@/components/ListFood';
+import dishApi from '@/api/dishApi';
+import { toast } from 'react-toastify';
 
 const TopRatedDishes = () => {
+  const [dishes, setDishes] = useState([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(()=> {
+    setLoading(true)
+    const fetchData = async () => {
+      try {
+        const response = await dishApi.getTopDishes()
+        setDishes(response)
+      } catch (error) {
+        console.log(error.message);
+        toast.error(error.message)
+      }
+      finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  },[])
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="py-8 px-32">
       <TextTitle text={"🌟 Top món ăn được đánh giá cao"}/>
-      <ListFood dishes={topDishes} />
+      <ListFood dishes={dishes} loading={loading}/>
       
     </div>
   );

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { contact } from '../../assets/images/index'
+import { contact } from '@/assets/images/index'
 import { toast } from 'react-toastify';
-import SectionHeader from '../../components/SectionHeader';
+import SectionHeader from '@/components/SectionHeader';
 const Contact = () => {
   const [form, setForm] = useState({ name: '', email: '', message: '' });
 
@@ -38,7 +38,7 @@ const Contact = () => {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block mb-1 font-medium">Tên của bạn</label>
+            <label className="block mb-1 font-medium text-text">Tên của bạn</label>
             <input
               type="text"
               name="name"
@@ -50,7 +50,7 @@ const Contact = () => {
           </div>
 
           <div>
-            <label className="block mb-1 font-medium">Email</label>
+            <label className="block mb-1 font-medium text-text">Email</label>
             <input
               type="email"
               name="email"
@@ -62,7 +62,7 @@ const Contact = () => {
           </div>
 
           <div>
-            <label className="block mb-1 font-medium">Nội dung</label>
+            <label className="block mb-1 font-medium text-text">Nội dung</label>
             <textarea
               name="message"
               rows="5"

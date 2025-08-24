@@ -1,21 +1,58 @@
 import React from 'react'
-import { FaUser } from 'react-icons/fa'
-import { MdNotifications } from 'react-icons/md'
+import { FaHome, FaUser, FaUtensils } from 'react-icons/fa'
+import { MdDashboard, MdNotifications } from 'react-icons/md'
+import { BiCommentDetail } from "react-icons/bi";
+import { GiKnifeFork } from "react-icons/gi";
+import { RiCalendarEventLine } from "react-icons/ri";
 import { FiLogOut } from "react-icons/fi";
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { ROUTES } from '../constant/routes'
 import { useDispatch, useSelector } from 'react-redux'
 import { logo } from '../assets/images/index'
 import { logout } from '../redux/slices/authSlice';
+import { toast } from 'react-toastify';
+import Notifications from '../pages/Notifications';
+
+const restaurantNotifications = [
+  {
+    id: 1,
+    title: '📥 Đơn hàng mới',
+    content: 'Nguyễn Văn A vừa đặt món "Cơm gà chiên mắm".',
+    icon: '📥',
+    createdAt: '2025-07-30T11:00:00Z',
+    isRead: false,
+    link: '/orders',
+  },
+  {
+    id: 2,
+    title: '💬 Đánh giá mới',
+    content: 'Khách hàng Trần B vừa đánh giá 5⭐ cho món "Lẩu Thái".',
+    icon: '💬',
+    createdAt: '2025-07-29T09:15:00Z',
+    isRead: false,
+    link: '/reviews',
+  },
+  {
+    id: 3,
+    title: '📈 Báo cáo tuần',
+    content: 'Báo cáo doanh thu và lượt đánh giá tuần đã sẵn sàng.',
+    icon: '📈',
+    createdAt: '2025-07-28T07:00:00Z',
+    isRead: true,
+    link: '/dashboard',
+  },
+];
+
 
 const RestaurantLayout = () => {
-  const {user, isAuthenticated} = useSelector(state => state.auth)
+  const {user, isAuthenticated, restaurantInfo} = useSelector(state => state.auth)
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const handleLogout = () => {
     dispatch(logout()); // xóa user, isAuthenticated
     localStorage.removeItem("user"); // nếu bạn lưu token/user
+    toast.success("Đăng xuất thành công!")
     navigate("/"); // quay về trang chủ hoặc login
   };
   return (
@@ -31,34 +68,47 @@ const RestaurantLayout = () => {
             to=""
             end
             className={({ isActive }) =>
-              isActive ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-500'
+              'flex items-center gap-2 ' + 
+              (isActive ? 'text-red-600 font-semibold' : 'text-gray-700 hover:text-red-500')
             }
           >
-            🏠 Trang chủ
+            <FaHome/> Trang chủ
           </NavLink>
           <NavLink
             to="dashboard"
             className={({ isActive }) =>
-              isActive ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-500'
+              'flex items-center gap-2 ' + 
+              (isActive ? 'text-red-600 font-semibold' : 'text-gray-700 hover:text-red-500')
             }
           >
-            ❤️ Dashboard
+            <MdDashboard /> Dashboard
           </NavLink>
           <NavLink
-            to="history"
+            to="reviews"
             className={({ isActive }) =>
-              isActive ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-500'
+              'flex items-center gap-2 ' + 
+              (isActive ? 'text-red-600 font-semibold' : 'text-gray-700 hover:text-red-500')
             }
           >
-            📝 Lịch sử đánh giá
+            <BiCommentDetail/> Lịch sử đánh giá
           </NavLink>
           <NavLink
             to="dishes"
             className={({ isActive }) =>
-              isActive ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-500'
+              'flex items-center gap-2 ' + 
+              (isActive ? 'text-red-600 font-semibold' : 'text-gray-700 hover:text-red-500')
             }
           >
-            📝 Quản lý món ăn
+            <GiKnifeFork/> Quản lý món ăn
+          </NavLink>
+          <NavLink
+            to="events"
+            className={({ isActive }) =>
+              'flex items-center gap-2 ' + 
+              (isActive ? 'text-red-600 font-semibold' : 'text-gray-700 hover:text-red-500')
+            }
+          >
+            <RiCalendarEventLine/> Quản lý sự kiện
           </NavLink>
         </nav>
         <button className='absolute bottom-7 left-7 flex items-center gap-2 px-5 py-2 rounded text-white bg-red-500 hover:bg-red-600' onClick={handleLogout}><FiLogOut /> Đăng xuất</button>
@@ -68,18 +118,14 @@ const RestaurantLayout = () => {
       <div className="flex-1 flex flex-col">
         {/* Header */}
         <header className="bg-white shadow py-4 px-6 flex justify-between items-center fixed top-0 left-64 right-0 z-10">
-          <h1 className="text-xl font-bold text-gray-800">Bảng điều khiển người dùng</h1>
+          <div className='flex items-center gap-3'>
+            <FaUtensils size={23} className="text-red-500" />
+            <h1 className="text-2xl font-medium text-gray-800">{restaurantInfo.Name}</h1>
+          </div>
           <div className="text-gray-600 flex gap-5 items-center">
-            <NavLink
-              to={ROUTES.NOTIFICATION}
-              className={({ isActive }) => `
-                flex items-center gap-1 px-4 py-6
-                ${isActive ? 'text-red-600 font-bold' : 'text-gray-700 hover:text-red-500'}
-              `}
-            >
-              <MdNotifications size={20} />
-              <span>Thông báo</span>
-            </NavLink>
+            <div className="flex items-center gap-1 px-4 py-6 text-gray-700 hover:text-red-500">
+              <Notifications notifications={restaurantNotifications}/>
+            </div>
             {isAuthenticated ? (
               <div className="relative group">
                 <div className="flex items-center gap-1 text-gray-700 hover:text-blue-500 cursor-pointer">

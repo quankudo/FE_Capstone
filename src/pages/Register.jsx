@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { ROUTES } from "../constant/routes";
+import { ROUTES } from "@/constant/routes";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -20,7 +20,6 @@ const Register = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
     if (!form.name || !form.email || !form.password || !form.confirmPassword) {
       setError("Vui lòng điền đầy đủ thông tin.");
       return;
@@ -38,7 +37,7 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-[60vh] flex items-center justify-center bg-gray-100 px-4">
+    <div className="min-h-[60vh] flex items-center justify-center bg-background px-4">
     <div className="max-w-md mx-auto my-10 p-8 bg-white shadow-md rounded-lg">
       <h2 className="text-2xl font-medium mb-4 text-center">Đăng ký</h2>
 

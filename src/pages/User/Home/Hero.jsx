@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { hero_1, hero_2, hero_3, hero_4 } from '../../../assets/images'
+import { hero_1, hero_2, hero_3, hero_4 } from '@/assets/images'
 
 import Slider from 'react-slick'
 

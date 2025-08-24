@@ -5,7 +5,7 @@ import TopRatedRestaurants from './TopRatedRestaurants'
 import TopRatedDishes from './TopRatedDishes'
 import Banner from './Banner'
 import { Link } from 'react-router-dom'
-import { ROUTES } from '../../../constant/routes'
+import { ROUTES } from '@/constant/routes'
 
 const Home = () => {
   return (

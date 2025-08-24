@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import TextTitle from '../../../components/TextTitle';
+import TextTitle from '@/components/TextTitle';
 
 const categories = [
   { icon: '🍔', label: 'Ăn nhanh' },
@@ -32,8 +32,8 @@ const FeaturedCategories = () => {
             <div
                 key={index}
                 onClick={() => setSelectedIndex(index)}
-                className={`flex flex-col items-center justify-center border rounded-xl p-4 shadow transition cursor-pointer
-                ${selectedIndex === index ? 'bg-red-100 border-red-500 text-red-600' : 'hover:bg-red-50'}`}
+                className={`flex flex-col items-center justify-center border rounded-xl p-4 text-text shadow transition cursor-pointer
+                ${selectedIndex === index ? 'bg-red-100 border-red-500 text-red-600' : 'hover:bg-red-50 hover:text-primary'}`}
             >
                 <span className="text-3xl">{cat.icon}</span>
                 <p className="mt-2 text-center text-sm font-medium">{cat.label}</p>

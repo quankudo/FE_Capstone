@@ -1,52 +1,74 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Pagination from '../../components/Pagination';
 import { useNavigate } from 'react-router-dom';
 
-import { FaRegFolderOpen } from "react-icons/fa6";
-
-const fakeDishes = [
-  { id: 1, name: 'Phở Bò', type: 'Món chính', price: 45000, status: 'Đang bán', image: '' },
-  { id: 2, name: 'Cà phê sữa đá', type: 'Đồ uống', price: 25000, status: 'Tạm ngưng', image: '' },
-  { id: 3, name: 'Bánh mì chảo', type: 'Món phụ', price: 35000, status: 'Đang bán', image: '' },
-  { id: 4, name: 'Bún Chả', type: 'Món chính', price: 50000, status: 'Đang bán', image: '' },
-  { id: 5, name: 'Trà đá', type: 'Đồ uống', price: 10000, status: 'Đang bán', image: '' },
-  { id: 6, name: 'Bánh flan', type: 'Món phụ', price: 20000, status: 'Tạm ngưng', image: '' },
-  { id: 7, name: 'Cơm gà', type: 'Món chính', price: 55000, status: 'Đang bán', image: '' },
-  { id: 8, name: 'Sinh tố bơ', type: 'Đồ uống', price: 30000, status: 'Đang bán', image: '' },
-];
+import dishApi from '../../api/dishApi';
+import { toast } from 'react-toastify';
+import { useSelector } from 'react-redux';
+import { IoFastFoodSharp } from 'react-icons/io5';
+import { FiPlus } from 'react-icons/fi';
+import TitleDashboard from '../../components/TitleDashboard';
 
 const DISHES_PER_PAGE = 4;
 
 const Dishes = () => {
+  const {user, isAuthenticated, restaurantInfo} = useSelector(state => state.auth)
   const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState('Tất cả');
+  const [typeFilter, setTypeFilter] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [dishes, setDishes] = useState([])
+  const [types, setTypes] = useState([])
+
+  useEffect(()=>{
+    const fetchData = async () => {
+      try {
+        const res = await dishApi.getDishTypes()
+        setTypes(res)
+      } catch (error) {
+        console.log(error);
+        toast.error(error.message)
+      }
+    }
+    fetchData()
+  },[restaurantInfo.Id])
+
+  useEffect(()=>{
+    const fetchData = async () => {
+      try {
+        const params = {
+          page: currentPage,
+          limit: DISHES_PER_PAGE,
+          search: search,
+          restaurantId: restaurantInfo.Id, // Giả sử city là idDistrict
+          type: typeFilter==0 ? undefined : typeFilter, // Có thể thêm lọc theo loại nhà hàng nếu muốn
+          // minRating : minRating,
+          // sortOrder : sortOrder
+        };
+        console.log(params);
+        
+        const response = await dishApi.getAllDishes(params)
+        console.log(response);
+        
+        setDishes(response.data)
+        setTotalPages(response.pagination.totalPages)
+      } catch (error) {
+        toast.error(error.message)
+        console.log(error);
+      }
+    }
+
+    fetchData()
+  },[restaurantInfo.Id, typeFilter, currentPage, search])
 
   const navigate = useNavigate();
-
-  const dishTypes = ['Tất cả', 'Món chính', 'Món phụ', 'Đồ uống'];
-
-  const filteredDishes = fakeDishes.filter((dish) => {
-    const matchesSearch = dish.name.toLowerCase().includes(search.toLowerCase());
-    const matchesType = typeFilter === 'Tất cả' || dish.type === typeFilter;
-    return matchesSearch && matchesType;
-  });
-
-  const totalPages = Math.ceil(filteredDishes.length / DISHES_PER_PAGE);
-  const paginatedDishes = filteredDishes.slice(
-    (currentPage - 1) * DISHES_PER_PAGE,
-    currentPage * DISHES_PER_PAGE
-  );
 
   const handlePageChange = (page) => setCurrentPage(page);
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-medium flex items-center gap-2"><FaRegFolderOpen /> Quản lý món ăn</h1>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-          + Thêm món ăn
-        </button>
+      <div className="flex justify-between items-center mb-3">
+        <TitleDashboard Icon={IoFastFoodSharp} title={'Quản lý món ăn'} />
       </div>
 
       <div className="flex flex-col md:flex-row md:items-center md:gap-4 mb-4">
@@ -68,12 +90,16 @@ const Dishes = () => {
             setCurrentPage(1);
           }}
         >
-          {dishTypes.map((type) => (
-            <option key={type} value={type}>
-              {type}
+          <option value={0}>Tất cả</option>
+          {types.map((type) => (
+            <option key={type.Id} value={type.Id}>
+              {type.Name}
             </option>
           ))}
         </select>
+        <button className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+          <FiPlus size={20} /> Thêm món ăn
+        </button>
       </div>
 
       <div className="overflow-x-auto">
@@ -89,25 +115,25 @@ const Dishes = () => {
             </tr>
           </thead>
           <tbody>
-            {paginatedDishes.map((dish) => (
-              <tr key={dish.id} className="border-t text-sm hover:bg-red-50 cursor-pointer" onClick={()=>navigate(`/rest/dishes/${dish.id}`)}>
+            {dishes.map((dish) => (
+              <tr key={dish.Id} className="border-t text-sm hover:bg-red-50 cursor-pointer" onClick={()=>navigate(`/rest/dishes/${dish.Id}`)}>
                 <td className="p-3">
                   <img
-                    src={dish.image || 'https://via.placeholder.com/60x50'}
-                    alt="Dish"
+                    src={dish.ImageUrl || 'https://via.placeholder.com/60x50'}
+                    alt={dish.Name}
                     className="w-[60px] h-[50px] rounded object-cover"
                   />
                 </td>
-                <td className="p-3">{dish.name}</td>
-                <td className="p-3">{dish.type}</td>
-                <td className="p-3">{dish.price.toLocaleString()}</td>
+                <td className="p-3">{dish.Name}</td>
+                <td className="p-3">{dish.TypeDishName}</td>
+                <td className="p-3">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(dish.Price)}</td>
                 <td className="p-3">
                   <span
                     className={`px-2 py-1 rounded text-white text-xs ${
-                      dish.status === 'Đang bán' ? 'bg-green-500' : 'bg-gray-400'
+                      dish.Status === 1 ? 'bg-green-500' : 'bg-gray-400'
                     }`}
                   >
-                    {dish.status}
+                    {dish.Status === 1 ? "Đang bán" : "Ngừng bán"}
                   </span>
                 </td>
                 <td className="p-3 text-center space-x-2">
@@ -120,7 +146,7 @@ const Dishes = () => {
                 </td>
               </tr>
             ))}
-            {paginatedDishes.length === 0 && (
+            {dishes.length === 0 && (
               <tr>
                 <td colSpan="6" className="text-center p-4 text-gray-500">
                   Không tìm thấy món ăn nào.

@@ -2,15 +2,18 @@ import { useState, useRef, useEffect } from "react";
 import CommentsList from "./CommentList";
 import { Send, MessageCircle, Share2, User } from "lucide-react";
 import blogsApi from "../../api/blogsApi";
+import { useSelector } from "react-redux";
+import axios from "axios";
+import { FlaskAPI } from "../../constant";
 
 const defaultEmojis = ["👍", "❤️", "😂", "😮", "😢", "😡"];
 const defaultEmojiNames = {
-  "👍": "Thích",
-  "❤️": "Yêu thích",
+  "👍": "Link",
+  "❤️": "Love",
   "😂": "Haha",
   "😮": "Wow",
-  "😢": "Buồn",
-  "😡": "Tức giận",
+  "😢": "Sad",
+  "😡": "Ảngy",
 };
 
 const reverseEmojiMap = {
@@ -39,6 +42,7 @@ const BlogPostCard = ({
   description = "...",
   imageUrl = "",
   tags = [""],
+  score = 0,
   initialReactions = {
     "👍": 0,
     "❤️": 0,
@@ -49,6 +53,7 @@ const BlogPostCard = ({
   },
   initialComments = [],
 }) => {
+  const {user, isAuthenticated} = useSelector(state => state.auth)
   const [reaction, setReaction] = useState(null);
   const [reactionsCount, setReactionsCount] = useState(initialReactions);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
@@ -64,17 +69,22 @@ const BlogPostCard = ({
   // TÁCH RIÊNG API GỌI EMOJI
   const loadEmojiData = async () => {
     try {
-      const response = await blogsApi.getEmojis();
-      const currentBlogEmojis = response.filter((item) => item.BlogId === id);
+      const response = await blogsApi.getEmojis(id);
+      const currentBlogEmojis = response;
+      
       setEmojiDetails(currentBlogEmojis);
+      // console.log(response);
+      
 
       const emojiCount = {};
       defaultEmojis.forEach((emojiKey) => {
-        const emojiTextKey = reverseEmojiMap[emojiKey];
+        const emojiTextKey = defaultEmojiNames[emojiKey];
         emojiCount[emojiKey] = currentBlogEmojis.filter(
           (item) => item.Emoji === emojiTextKey
         ).length;
       });
+      console.log(emojiCount);
+      
       setReactionsCount(emojiCount);
 
       const currentUserId = 1;
@@ -133,7 +143,7 @@ const BlogPostCard = ({
       const emojiData = {
         BlogId: id,
         IconId: emojiCode,
-        IdUser: 1,
+        IdUser: user.id,
       };
       await blogsApi.addEmoji(emojiData);
       await loadEmojiData(); // reload sau khi thêm
@@ -166,11 +176,18 @@ const BlogPostCard = ({
 
   const handleSubmitComment = async () => {
     if (!newComment.trim()) return;
+
+    const aiRes = await axios.post(FlaskAPI, {
+      review: reviewText
+    });
+
+    const isPositive = aiRes.data.label === 'Positive';
     try {
       const newCommentData = {
         IdBlog: id,
         comment: newComment,
-        IdUser: 1,
+        IdUser: user.id,
+        type: isPositive
       };
       await blogsApi.addComment(newCommentData);
       setNewComment("");
@@ -197,9 +214,12 @@ const BlogPostCard = ({
   return (
     <article className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <div className="p-6 pb-4">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4 leading-tight cursor-pointer">
-          {title}
-        </h2>
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4 leading-tight cursor-pointer">
+            {title}
+          </h2>
+          {score !== 0 &&<div className="w-[40px] h-[40px] rounded-full bg-red-500 text-white flex justify-center items-center">{score}</div>}
+        </div>
         <div className="flex items-center mb-4">
           <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mr-3">
             <User className="w-5 h-5 text-gray-500" />
@@ -227,16 +247,66 @@ const BlogPostCard = ({
         </button>
       </div>
 
-      {imageUrl && (
-        <div className="px-6 pb-4">
+      {imageUrl && (() => {
+  const images = imageUrl.split(",").slice(0, 3).map(url => url.trim());
+
+  if (images.length === 1) {
+    // 1 ảnh
+    return (
+      <div className="px-6 pb-4">
+        <img
+          src={images[0]}
+          alt={title}
+          className="w-full h-96 object-cover rounded-lg"
+          onError={(e) => (e.target.src = "")}
+        />
+      </div>
+    );
+  }
+
+  if (images.length === 2) {
+    // 2 ảnh
+    return (
+      <div className="px-6 pb-4 grid grid-cols-2 gap-2">
+        {images.map((url, i) => (
           <img
-            src={imageUrl}
-            alt={title}
-            className="w-full h-64 object-cover rounded-lg"
+            key={i}
+            src={url}
+            alt={`${title}-${i + 1}`}
+            className="w-full h-80 object-cover rounded-lg"
             onError={(e) => (e.target.src = "")}
           />
-        </div>
-      )}
+        ))}
+      </div>
+    );
+  }
+
+  // 3 ảnh → 1 ảnh lớn + 2 ảnh nhỏ
+  return (
+    <div className="px-6 pb-4 grid grid-cols-3 gap-2">
+      <div className="col-span-2">
+        <img
+          src={images[0]}
+          alt={`${title}-1`}
+          className="w-full h-96 object-cover rounded-lg"
+          onError={(e) => (e.target.src = "")}
+        />
+      </div>
+      <div className="flex flex-col gap-2">
+        {images.slice(1).map((url, i) => (
+          <img
+            key={i}
+            src={url}
+            alt={`${title}-${i + 2}`}
+            className="w-full h-46 object-cover rounded-lg"
+            onError={(e) => (e.target.src = "")}
+          />
+        ))}
+      </div>
+    </div>
+  );
+})()}
+
 
       <div className="px-6 py-4 border-t border-gray-50">
         <div className="flex items-center justify-between">

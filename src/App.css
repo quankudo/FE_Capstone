@@ -4,15 +4,68 @@
   box-sizing: border-box;
 }
 
-html {
-  overflow-x: hidden;
+body {
+  font-family: 'Roboto', Arial, sans-serif;
 }
 
+::selection {
+  background: #ef4444;
+  color: white;
+}
+
+h1, h2, h3 {
+  font-family: 'Playfair Display', serif;
+}
+
+/* Cho trình duyệt hỗ trợ ::-webkit-scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f2f2f2; /* màu xám nhạt */
+  border-radius: 15px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #ef4444; /* 🔴 màu đỏ */
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+
+html {
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+.slick-slider .slick-track {
+  transition: transform 0.8s ease-in-out !important;
+}
+
+.slick-slider .slick-slide {
+  transition: opacity 0.6s ease-in-out !important;
+}
+
+/* Light mode */
 .slick-dots li button:before {
-  color: white;  /* hoặc màu khác */
+  color: #333; /* dot màu xám trong light */
 }
 
 .slick-dots li.slick-active button:before {
-  color: red !important; /* dot được chọn màu đỏ */
+  color: #ff0000 !important; /* dot active đỏ */
   opacity: 1;
 }
+
+/* Dark mode */
+.dark .slick-dots li button:before {
+  color: #fff; /* dot màu trắng trong dark */
+}
+
+.dark .slick-dots li.slick-active button:before {
+  color: #ff0000 !important; /* dot active xanh trong dark */
+  opacity: 1;
+}
+

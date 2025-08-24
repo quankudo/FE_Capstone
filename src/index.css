@@ -1,3 +1,18 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.light {
+    --color-background: 255,255,255;
+    --color-primary: 239,68,68;
+    --color-text: 31,41,46;
+    --color-input: 255,255,255;
+}
+
+.dark {
+    --color-text: 255,255,255;
+    --color-primary: 239,68,68;
+    --color-background: 28, 42, 37; /*28, 42, 37*/
+    --color-input: 31, 41, 55;
+}
+

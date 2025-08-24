@@ -3,8 +3,8 @@ import axiosClient from './axiosClient';
 const userApi = {
     login: (data) => axiosClient.post('/users/login', data),
     register: (data) => axiosClient.post('/users/register', data),
-    getAllUsers: () => axiosClient.get('/users/'),
-    getUsersById: (id) => axiosClient.get(`/users/${id}`),
+    getAllUsers: (params) => axiosClient.get('/users/', {params}),
+    getUsersById: (id) => axiosClient.get(`/users/info/${id}`),
 };
 
 export default userApi;

@@ -9,11 +9,23 @@ import NotFound from "../pages/NotFound";
 import Register from "../pages/Register";
 import Restaurant from "../pages/User/Restaurant";
 import RestaurantDetail from "../pages/User/RestaurantDetails";
+import UserProfile from "../pages/User/UserProfile";
+import Events from "../pages/User/Events";
+import Unauthorized from "../pages/Unauthorized";
+import Dishes from "../pages/User/Dishes";
 
 export const LIST_ROUTE = [
     {
         path: ROUTES.BLOG,
         element: <Blogs/> 
+    },
+    {
+        path: ROUTES.DISH,
+        element: <Dishes/> 
+    },
+    {
+        path: ROUTES.USER_PROFILE,
+        element: <UserProfile/> 
     },
     {
         path: ROUTES.DISH_DETAIL,
@@ -50,5 +62,13 @@ export const LIST_ROUTE = [
     {
         path: ROUTES.RESTAURANT,
         element: <Restaurant/> 
+    },
+    {
+        path: ROUTES.EVENT,
+        element: <Events/> 
+    },
+    {
+        path: ROUTES.UNAUTHORIZED,
+        element: <Unauthorized/>
     },
 ]

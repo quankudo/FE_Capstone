@@ -1,6 +1,6 @@
 import React from 'react'
-import TextTitle from '../../../components/TextTitle'
-import {banner_1, banner_2} from '../../../assets/images/index'
+import TextTitle from '@/components/TextTitle'
+import {banner_1, banner_2} from '@/assets/images/index'
 
 const Banner = () => {
   return (

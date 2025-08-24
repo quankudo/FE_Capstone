@@ -1,15 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import SectionHeader from '../../components/SectionHeader';
+import SectionHeader from '@/components/SectionHeader';
 import Swal from 'sweetalert2'
 import {toast} from 'react-toastify'
-import restaurantApi from '../../api/restaurantApi';
-import dishApi from '../../api/dishApi';
+import restaurantApi from '@/api/restaurantApi';
+import dishApi from '@/api/dishApi';
+import Loading from '@/components/Loading';
+import axios from 'axios';
+import evaluateDishApi from '@/api/evaluateDishApi';
+import evaluateRestaurantApi from '@/api/evaluateRestaurantApi';
+import { useSelector } from 'react-redux';
+import { FlaskAPI } from '@/constant';
 
 const CallToActionReview = () => {
+  const {user, isAuthenticated} = useSelector(state => state.auth)
   const [reviewType, setReviewType] = useState('restaurant');
   const [selectedRestaurant, setSelectedRestaurant] = useState('');
   const [selectedDish, setSelectedDish] = useState('');
   const [reviewText, setReviewText] = useState('');
+  const [loading, setLoading] = useState(false)
   const [restaurants, setRestaurants] = useState([]);
   const [dishes, setDishes] = useState([]);
 
@@ -42,42 +50,60 @@ const CallToActionReview = () => {
   }
 
   const handleSubmit = async () => {
+    if (!reviewText.trim()) {
+      toast.warning("Vui lòng nhập nội dung đánh giá!");
+      return;
+    }
+
+    setLoading(true);
     try {
-    // const response = await axios.post('http://localhost:5000/predict', {
-    //   review: reviewText,
-    // });
+      // 1. Gọi AI model
+      const aiRes = await axios.post(FlaskAPI, {
+        review: reviewText
+      });
 
-    const response = true; // test true / false
+      const isPositive = aiRes.data.label === 'Positive';
+      // const isPositive = true;
 
-    if (response === true) {
+      // 2. Chuẩn bị comment object
+      const comment = {
+        IdUser: user.id,
+        Comment: reviewText,
+        TypeReview: isPositive,
+      };
+
+      if (reviewType === 'restaurant') {
+        comment.Id = selectedRestaurant;
+        await evaluateRestaurantApi.AddEvaluate(comment);
+      } else {
+        comment.Id = selectedDish;
+        await evaluateDishApi.AddEvaluate(comment);
+      }
+
+      // 3. Show thông báo
       Swal.fire({
-        icon: 'success',
-        title: '🎉 Cảm ơn bạn rất nhiều!',
-        text: 'Chúng tôi rất vui khi nhận được đánh giá tích cực từ bạn. Phản hồi của bạn là nguồn động lực lớn để chúng tôi không ngừng nâng cao chất lượng dịch vụ!',
+        icon: isPositive ? 'success' : 'info',
+        title: isPositive ? '🎉 Cảm ơn bạn rất nhiều!' : '🙏 Cảm ơn bạn đã góp ý!',
+        text: isPositive
+          ? 'Chúng tôi rất vui khi nhận được đánh giá tích cực từ bạn. Phản hồi của bạn là nguồn động lực lớn để chúng tôi không ngừng nâng cao chất lượng dịch vụ!'
+          : 'Chúng tôi xin ghi nhận những phản hồi chân thành từ bạn. Đội ngũ của chúng tôi sẽ xem xét và cải thiện dịch vụ trong thời gian tới!',
         confirmButtonText: 'Đóng',
         confirmButtonColor: '#3085d6',
       });
-    } else {
-      Swal.fire({
-        icon: 'info',
-        title: '🙏 Cảm ơn bạn đã góp ý!',
-        text: 'Chúng tôi xin ghi nhận những phản hồi chân thành từ bạn. Đội ngũ của chúng tôi sẽ xem xét và cải thiện dịch vụ trong thời gian tới!',
-        confirmButtonText: 'Đóng',
-        confirmButtonColor: '#3085d6',
-      });
-    }
 
-  } catch (error) {
-    toast.error('Có lỗi xảy ra khi gửi đánh giá. Vui lòng thử lại sau.');
-    console.error('Chi tiết lỗi:', error);
-  }
-    if (reviewType === 'restaurant') {
-      console.log('Đánh giá nhà hàng:', selectedRestaurant, reviewText);
-    } else {
-      console.log('Đánh giá món ăn:', selectedRestaurant, selectedDish, reviewText);
+    } catch (error) {
+      toast.error('Có lỗi xảy ra khi gửi đánh giá. Vui lòng thử lại sau.');
+      console.error('Chi tiết lỗi:', error);
+    } finally {
+      setReviewText('')
+      setSelectedDish('')
+      setSelectedRestaurant('')
+      setLoading(false);
     }
-
   };
+
+  if(loading)
+    return <Loading />
 
   return (
     <div className='px-32 pt-5'>

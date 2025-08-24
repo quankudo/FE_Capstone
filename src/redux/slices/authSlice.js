@@ -4,10 +4,11 @@ import { createSlice } from '@reduxjs/toolkit';
 const savedUser = JSON.parse(localStorage.getItem('user'));
 
 const initialState = {
-  user: savedUser || null,
+  user: savedUser?.user || null,
   isAuthenticated: !!savedUser,
   loading: false,
   error: null,
+  restaurantInfo: savedUser?.restaurantInfo || null,
 };
 
 const authSlice = createSlice({
@@ -19,10 +20,16 @@ const authSlice = createSlice({
       state.error = null;
     },
     loginSuccess(state, action) {
-        console.log(action);
-        localStorage.setItem('user', JSON.stringify(action.payload));
+      console.log(action);
+      localStorage.setItem('user', JSON.stringify(action.payload));
+
+      if (action.payload.user?.role === 'Restaurant') {
+        state.restaurantInfo = action.payload.restaurantInfo || null;
+      } else {
+        state.restaurantInfo = null;
+      }
         
-      state.user = action.payload;
+      state.user = action.payload.user;
       state.isAuthenticated = true;
       state.loading = false;
     },

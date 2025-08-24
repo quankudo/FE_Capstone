@@ -1,61 +1,94 @@
-import React from 'react';
-
-const restaurant = {
-  id: 1,
-  name: 'Nhà hàng Ngon Việt',
-  website: 'https://ngonviet.vn',
-  status: true,
-  email: 'contact@ngonviet.vn',
-  desc: 'Nhà hàng chuyên phục vụ các món ăn truyền thống Việt Nam.',
-  goodReviews: 120,
-  badReviews: 5,
-  rateScore: 4.7,
-  imageUrl: '',
-  latitude: 10.7769,
-  longitude: 106.7009,
-  phoneNumber: '0909123456',
-  openTime: '07:00',
-  closeTime: '22:00',
-  districtName: 'Quận 1',
-  cityName: 'TP. Hồ Chí Minh',
-};
+import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import restaurantApi from '../../api/restaurantApi';
+import { toast } from 'react-toastify';
+import Loading from '../../components/Loading';
+import formatTime from '../../utils/formatTime';
+import { IoRestaurant } from 'react-icons/io5';
+import TitleDashboard from '../../components/TitleDashboard';
 
 const HomeRestaurant = () => {
-  return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <h3 className="text-2xl font-medium mb-6">Thông tin nhà hàng</h3>
+  const {user, isAuthenticated} = useSelector(state => state.auth)
+  const [loading, setLoading] = useState(false)
+  const [restaurant, setRestaurant] = useState({})
 
-      <div className="bg-white shadow rounded p-6 flex justify-between flex-col md:flex-row gap-6">
-        <img
-          src={restaurant.imageUrl || 'https://via.placeholder.com/250x180?text=Restaurant'}
-          alt="Restaurant"
-          className="w-full md:w-[500px] h-[200px] object-cover rounded"
-        />
-        <div className="flex-1 space-y-2 text-gray-800">
-          <p><span className="font-semibold">Tên nhà hàng:</span> {restaurant.name}</p>
-          <p><span className="font-semibold">Email:</span> {restaurant.email}</p>
-          <p><span className="font-semibold">Số điện thoại:</span> {restaurant.phoneNumber}</p>
-          <p><span className="font-semibold">Website:</span> <a href={restaurant.website} className="text-blue-600 underline">{restaurant.website}</a></p>
-          <p><span className="font-semibold">Địa chỉ:</span> {restaurant.districtName}, {restaurant.cityName}</p>
-          <p><span className="font-semibold">Giờ hoạt động:</span> {restaurant.openTime} - {restaurant.closeTime}</p>
-          <p>
-            <span className="font-semibold">Trạng thái:</span>{' '}
-            <span className={`inline-block px-2 py-1 rounded text-xs text-white ${restaurant.status ? 'bg-green-500' : 'bg-gray-500'}`}>
-              {restaurant.status ? 'Đang hoạt động' : 'Tạm ngưng'}
-            </span>
-          </p>
-          <p><span className="font-semibold">Đánh giá trung bình:</span> ⭐ {restaurant.rateScore}</p>
-          <p>
-            <span className="font-semibold">Phản hồi:</span>{' '}
-            <span className="text-green-600 font-semibold">{restaurant.goodReviews} tích cực</span>,{' '}
-            <span className="text-red-500 font-semibold">{restaurant.badReviews} tiêu cực</span>
-          </p>
+  useEffect(()=> {
+    setLoading(true)
+    const fetchData = async () => {
+      try {
+        const response = await restaurantApi.getRestaurantByUserId(user.id)
+        setRestaurant(response)
+      } catch (error) {
+        toast.error(error.message)
+        console.log(error);
+      }
+      finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  },[])
+
+  if(loading)
+    return <Loading />
+
+  return (
+    <div className="p-4">
+      <TitleDashboard Icon={IoRestaurant} title={'Thông tin nhà hàng'} />
+
+      <div className="bg-white shadow rounded-2xl p-6 flex flex-col gap-6">
+        {/* Ảnh nhà hàng */}
+        <div className="col-span-1 flex justify-center items-start">
+          <img
+            src={restaurant.ImageUrl || 'https://via.placeholder.com/250x180?text=Restaurant'}
+            alt="Restaurant"
+            className="rounded w-full md:w-full h-[300px] object-cover"
+          />
+        </div>
+
+        {/* Thông tin chính */}
+        <div className="col-span-2 space-y-3 text-gray-800">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <p><span className="font-semibold">Tên:</span> {restaurant.Name}</p>
+            <p><span className="font-semibold">Email:</span> {restaurant.Email}</p>
+            <p><span className="font-semibold">Số điện thoại:</span> {restaurant.PhoneNumber}</p>
+            <p><span className="font-semibold">Website:</span> 
+              <a href={restaurant.Website} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline ml-1">
+                {restaurant.Website}
+              </a>
+            </p>
+            <p><span className="font-semibold">Khu vực:</span> {restaurant.DistrictName}, {restaurant.CityName}</p>
+            <p><span className="font-semibold">Giờ hoạt động:</span> {formatTime(restaurant.OpenTime)} - {formatTime(restaurant.CloseTime)}</p>
+          </div>
+
+          {/* Trạng thái + Đánh giá */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pt-4 border-t">
+            <div>
+              <p>
+                <span className="font-semibold">Trạng thái:</span>{' '}
+                <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium text-white 
+                  ${restaurant.Status ? 'bg-green-600' : 'bg-gray-500'}`}>
+                  {restaurant.Status ? 'Đang hoạt động' : 'Tạm ngưng'}
+                </span>
+              </p>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <p className="text-yellow-500 font-semibold">⭐ {parseFloat(restaurant.Score).toFixed(1)} / 5</p>
+              <p>
+                <span className="text-green-600 font-medium">{restaurant.GoodReviews} tích cực</span>,{' '}
+                <span className="text-red-500 font-medium">{restaurant.BadReviews} tiêu cực</span>
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
+
       <div className="mt-6 bg-white p-6 rounded shadow">
         <h2 className="text-lg font-semibold mb-2">Giới thiệu</h2>
-        <p className="text-gray-700">{restaurant.desc}</p>
+        <p className="text-gray-700">{restaurant.Desc}</p>
       </div>
 
       <div className="mt-6 bg-white p-6 rounded shadow">
@@ -65,7 +98,7 @@ const HomeRestaurant = () => {
           height="300"
           className="rounded"
           loading="lazy"
-          src={`https://www.google.com/maps?q=${restaurant.latitude},${restaurant.longitude}&hl=vi&z=16&output=embed`}
+          src={`https://www.google.com/maps?q=${restaurant.Latitude},${restaurant.Longitude}&hl=vi&z=16&output=embed`}
         ></iframe>
       </div>
     </div>
